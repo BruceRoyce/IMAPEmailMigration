@@ -12,7 +12,7 @@ defaults:
   maxMessageBytes: 26214400 # 25 MiB; oversized messages remain unresolved.
   memoryBudgetMiB: 512
   maxOccurrences: 5000 # Raise together with memoryBudgetMiB for larger plans.
-  timeoutSeconds: 60
+  timeoutSeconds: 300 # 5–3600 seconds; raise for slow connections or servers
   candidateLimit: 100
 mailboxes:
   - id: support

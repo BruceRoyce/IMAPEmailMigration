@@ -165,6 +165,7 @@ function App() {
     [migration, setMigration] = useState(''),
     [limit, setLimit] = useState(25),
     [budget, setBudget] = useState(512),
+    [timeoutSeconds, setTimeoutSeconds] = useState(300),
     [maxOccurrences, setMaxOccurrences] = useState(5000),
     [overrideDrafts, setOverrideDrafts] = useState<Record<number, string>>({}),
     [exclusionDrafts, setExclusionDrafts] = useState<Record<number, string>>({}),
@@ -692,6 +693,21 @@ function App() {
                   />
                 </label>
                 <label>
+                  IMAP timeout (seconds)
+                  <input
+                    type="number"
+                    min="5"
+                    max="3600"
+                    step="1"
+                    value={timeoutSeconds}
+                    onChange={(e) => {
+                      setTimeoutSeconds(Number(e.target.value));
+                      setReady(false);
+                      invalidatePlan();
+                    }}
+                  />
+                </label>
+                <label>
                   Inventory occurrence ceiling
                   <input
                     type="number"
@@ -720,6 +736,7 @@ function App() {
                       mailboxes: pairs,
                       maxMessageMiB: limit,
                       memoryBudgetMiB: budget,
+                      timeoutSeconds,
                       maxOccurrences,
                     });
                     setTests(result.results);
@@ -1301,7 +1318,7 @@ function DiscoveryStatus({
   };
   const problems: Record<string, string> = {
     discovery_timeout:
-      'Discovery stopped because a read made no progress before its timeout. Check the connection and retry.',
+      'Discovery stopped because a read made no progress before its timeout. Increase IMAP timeout (seconds), test the connection again, and retry discovery.',
     occurrence_ceiling:
       'This inventory exceeds the configured occurrence ceiling. Increase the inventory ceiling and memory allowance together, or exclude folders. A pilot still inventories all selected folders.',
     source_uidvalidity_changed:

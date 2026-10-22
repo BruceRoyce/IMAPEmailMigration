@@ -9,6 +9,7 @@ const safe = z
   .min(1)
   .max(1024)
   .refine((s) => !/[\x00-\x1f\x7f]/.test(s));
+export const timeoutSecondsSchema = z.number().int().min(5).max(3600).default(300);
 const endpoint = z
   .object({
     host: z
@@ -49,7 +50,7 @@ const schema = z
           .default(25 * 1024 * 1024),
         memoryBudgetMiB: z.number().int().min(256).max(8192).default(512),
         maxOccurrences: z.number().int().min(1).max(100000).default(5000),
-        timeoutSeconds: z.number().int().min(5).max(300).default(60),
+        timeoutSeconds: timeoutSecondsSchema,
         candidateLimit: z.number().int().min(1).max(1000).default(100),
       })
       .strict()
@@ -65,7 +66,7 @@ const schema = z
             maxMessageBytes: 26214400,
             memoryBudgetMiB: 512,
             maxOccurrences: 5000,
-            timeoutSeconds: 60,
+            timeoutSeconds: 300,
             candidateLimit: 100,
           }) as const,
       ),

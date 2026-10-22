@@ -40,6 +40,7 @@ export function ArchiveExport({
     maxMessageMiB: 25,
     maxOccurrences: 5000,
     memoryBudgetMiB: 512,
+    timeoutSeconds: 300,
   });
   const active = job.status === 'running';
   useEffect(() => {
@@ -141,25 +142,30 @@ export function ArchiveExport({
           </label>
         </div>
         <div className="row">
-          {(['maxMessageMiB', 'maxOccurrences', 'memoryBudgetMiB'] as const).map((key) => (
-            <label key={key}>
-              {
+          {(['maxMessageMiB', 'maxOccurrences', 'memoryBudgetMiB', 'timeoutSeconds'] as const).map(
+            (key) => (
+              <label key={key}>
                 {
-                  maxMessageMiB: 'Message ceiling (MiB)',
-                  maxOccurrences: 'Inventory occurrence ceiling',
-                  memoryBudgetMiB: 'Memory allowance (MiB)',
-                }[key]
-              }
-              <input
-                type="number"
-                value={limits[key]}
-                onChange={(e) => {
-                  setLimits({ ...limits, [key]: Number(e.target.value) });
-                  setReady(false);
-                }}
-              />
-            </label>
-          ))}
+                  {
+                    maxMessageMiB: 'Message ceiling (MiB)',
+                    maxOccurrences: 'Inventory occurrence ceiling',
+                    memoryBudgetMiB: 'Memory allowance (MiB)',
+                    timeoutSeconds: 'IMAP timeout (seconds)',
+                  }[key]
+                }
+                <input
+                  type="number"
+                  min={key === 'timeoutSeconds' ? 5 : undefined}
+                  max={key === 'timeoutSeconds' ? 3600 : undefined}
+                  value={limits[key]}
+                  onChange={(e) => {
+                    setLimits({ ...limits, [key]: Number(e.target.value) });
+                    setReady(false);
+                  }}
+                />
+              </label>
+            ),
+          )}
         </div>
         <button
           onClick={() =>

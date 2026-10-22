@@ -27,6 +27,51 @@ const payload = () => ({
   maxMessageMiB: 25,
   memoryBudgetMiB: 512,
 });
+test('web timeout is validated and reaches connection, discovery and export adapters', async () => {
+  const f = fixture();
+  const observed: number[] = [];
+  const web = await createWeb(8787, f.c.stateDirectory, f.c.reportDirectory, (...args) => {
+    observed.push(args[3].defaults.timeoutSeconds);
+    return f.factory(...args);
+  });
+  const headers = { host: '127.0.0.1:8787', 'x-session-token': web.token };
+  const post = (path: string, body: object) =>
+    web.app.inject({ url: '/api/' + path, method: 'POST', headers, payload: body });
+  try {
+    assert.equal((await post('test', payload())).json().ready, true);
+    assert.deepEqual(observed.splice(0), [300, 300]);
+    assert.equal((await post('test', { ...payload(), timeoutSeconds: 1200 })).json().ready, true);
+    assert.deepEqual(observed.splice(0), [1200, 1200]);
+    assert.equal((await post('plan', {})).statusCode, 202);
+    for (let i = 0; i < 100 && web.isRunning(); i++) await new Promise((r) => setTimeout(r, 5));
+    assert.ok(observed.length > 0);
+    assert.ok(observed.splice(0).every((value) => value === 1200));
+    for (const timeoutSeconds of [4, 3601, 12.5]) {
+      assert.ok((await post('test', { ...payload(), timeoutSeconds })).statusCode >= 400);
+      assert.ok(
+        (await post('archive/test', { source: payload().mailboxes[0]!.source, timeoutSeconds }))
+          .statusCode >= 400,
+      );
+    }
+    assert.equal(observed.length, 0);
+    assert.equal(
+      (
+        await post('archive/test', { source: payload().mailboxes[0]!.source, timeoutSeconds: 1800 })
+      ).json().ready,
+      true,
+    );
+    assert.deepEqual(observed.splice(0), [1800]);
+    assert.equal(
+      (await post('archive/export', { path: f.base + '/timeout-archive' })).statusCode,
+      202,
+    );
+    for (let i = 0; i < 100 && web.isRunning(); i++) await new Promise((r) => setTimeout(r, 5));
+    assert.deepEqual(observed, [1800]);
+  } finally {
+    web.cancel();
+    await web.app.close();
+  }
+});
 test('local replan uses the retained snapshot without any IMAP operations and invalidates old approvals', async () => {
   const f = fixture();
   f.source.folders.get('INBOX')!.add();

@@ -1,4 +1,4 @@
-# Verification evidence — 20 September 2026
+# Verification evidence — 21 September 2026
 
 Environment: Windows, PowerShell, Node 24.11.0, npm 11.19.0, ImapFlow 2.0.5. The workspace was initially empty and was not a Git checkout. No production credentials or real mailboxes were used.
 
@@ -6,7 +6,7 @@ Environment: Windows, PowerShell, Node 24.11.0, npm 11.19.0, ImapFlow 2.0.5. The
 | ----------------------------------------------- | ------------------------------------------------------------------ |
 | `npm run check`                                 | TypeScript backend and React UI passed                             |
 | `npm run build`                                 | Backend and production UI bundle built                             |
-| `npm test`                                      | **55 passed**, 0 failed, 0 skipped                                 |
+| `npm test`                                      | **56 passed**, 0 failed, 0 skipped                                 |
 | `npm run test:ui` with installed Microsoft Edge | **12 passed**                                                      |
 | CLI `--help` and example `validate`             | Passed                                                             |
 | `npm run integration` without opt-in            | **1 explicitly skipped**, 0 passed                                 |

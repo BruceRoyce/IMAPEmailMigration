@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { z } from 'zod';
 import { type Config, type Endpoint, validateConfig, identity } from './config.js';
+import { timeoutSecondsSchema } from './config.js';
 import {
   ArchiveReader,
   archiveSource,
@@ -63,6 +64,7 @@ const setup = z
     maxMessageMiB: z.number().int().min(1).max(100),
     memoryBudgetMiB: z.number().int().min(256).max(8192),
     maxOccurrences: z.number().int().min(1).max(100000).default(5000),
+    timeoutSeconds: timeoutSecondsSchema,
   })
   .strict();
 export async function createWeb(
@@ -240,6 +242,7 @@ export async function createWeb(
       reportDirectory,
       defaults: {
         maxMessageBytes: body.maxMessageMiB * 1024 * 1024,
+        timeoutSeconds: body.timeoutSeconds,
         memoryBudgetMiB: body.memoryBudgetMiB,
         maxOccurrences: body.maxOccurrences,
       },
@@ -532,6 +535,7 @@ export async function createWeb(
       .object({
         source: inputEndpoint,
         maxMessageMiB: z.number().int().min(1).max(100).default(25),
+        timeoutSeconds: timeoutSecondsSchema,
         maxOccurrences: z.number().int().min(1).max(100000).default(5000),
         memoryBudgetMiB: z.number().int().min(256).max(8192).default(512),
       })
@@ -546,6 +550,7 @@ export async function createWeb(
         maxMessageBytes: body.maxMessageMiB * 1024 * 1024,
         maxOccurrences: body.maxOccurrences,
         memoryBudgetMiB: body.memoryBudgetMiB,
+        timeoutSeconds: body.timeoutSeconds,
       },
       mailboxes: [
         {

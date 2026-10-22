@@ -164,6 +164,11 @@ test('folder selections preserve existing exclusions and remain scoped to each m
 test('operator connects, reviews, confirms, migrates and downloads evidence', async ({ page }) => {
   const { token } = JSON.parse(readFileSync('test/ui-session.json', 'utf8'));
   await page.goto('/#' + token);
+  await expect(page.getByLabel('IMAP timeout (seconds)', { exact: true })).toHaveValue('300');
+  await page.getByLabel('IMAP timeout (seconds)', { exact: true }).fill('1200');
+  const connectionRequest = page.waitForRequest(
+    (r) => r.url().endsWith('/api/test') && r.method() === 'POST',
+  );
   await expect(page.getByRole('button', { name: 'Start migration', exact: true })).toBeDisabled();
   for (const side of ['source', 'destination']) {
     await page
@@ -175,6 +180,7 @@ test('operator connects, reviews, confirms, migrates and downloads evidence', as
     await page.getByLabel(`mailbox-1 ${side} password`, { exact: true }).fill('synthetic-only');
   }
   await page.getByRole('button', { name: 'Test both connections' }).click();
+  expect((await connectionRequest).postDataJSON().timeoutSeconds).toBe(1200);
   await expect(
     page.getByText('mailbox-1 · source: TLS, authentication and folder access passed'),
   ).toBeVisible();
@@ -509,6 +515,11 @@ test('store locally exports a portable archive and imports it through the destin
   const { token, archiveRoot } = JSON.parse(readFileSync('test/ui-session.json', 'utf8'));
   await page.goto('/#' + token);
   await page.getByRole('tab', { name: 'Store locally', exact: true }).click();
+  await expect(page.getByLabel('IMAP timeout (seconds)', { exact: true })).toHaveValue('300');
+  await page.getByLabel('IMAP timeout (seconds)', { exact: true }).fill('1800');
+  const archiveRequest = page.waitForRequest(
+    (r) => r.url().endsWith('/api/archive/test') && r.method() === 'POST',
+  );
   await expect(page.getByRole('heading', { name: 'Store emails locally' })).toBeVisible();
   await expect(page.getByLabel('mailbox-1 destination host', { exact: true })).toHaveCount(0);
   await page.getByLabel('Archive source host', { exact: true }).fill('old.example');
@@ -517,6 +528,7 @@ test('store locally exports a portable archive and imports it through the destin
     .fill('synthetic@business.example');
   await page.getByLabel('Archive source password', { exact: true }).fill('synthetic-only');
   await page.getByRole('button', { name: 'Test source and list folders' }).click();
+  expect((await archiveRequest).postDataJSON().timeoutSeconds).toBe(1800);
   await expect(page.getByText('Source connection passed.', { exact: false })).toBeVisible();
   await expect(
     page.getByRole('checkbox', { name: 'Store Container only', exact: true }),
